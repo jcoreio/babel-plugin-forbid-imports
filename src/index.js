@@ -6,7 +6,8 @@ export default function() {
   let lastPatterns
 
   function selectPatterns(state) {
-    const { opts, cwd } = state
+    const { opts } = state
+    const cwd = state.cwd || process.cwd()
     if (opts === lastOpts && cwd === lastCwd) return lastPatterns
     lastCwd = cwd
     lastOpts = opts
@@ -40,9 +41,13 @@ export default function() {
   return {
     visitor: {
       ImportDeclaration(_path, state) {
+        const filename =
+          (state.file && state.file.opts && state.file.opts.filename) ||
+          state.filename
+        const cwd = state.cwd || process.cwd()
         const rawSource = _path.node.source.value
         const source = /^[./]/.test(rawSource)
-          ? path.resolve(path.dirname(state.filename), rawSource)
+          ? path.resolve(path.dirname(filename), rawSource)
           : rawSource
         const patterns = selectPatterns(state)
         patterns.forEach(({ pattern, type, what }) => {
@@ -57,8 +62,8 @@ export default function() {
                 break
               case 'path':
                 rule = path.relative(
-                  path.dirname(state.filename),
-                  path.resolve(state.cwd, what)
+                  path.dirname(filename),
+                  path.resolve(cwd, what)
                 )
                 if (!/^\./.test(rule)) rule = `./${rule}`
                 rule = `'${rule}'`
