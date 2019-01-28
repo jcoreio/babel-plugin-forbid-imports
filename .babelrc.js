@@ -16,9 +16,6 @@ module.exports = function(api) {
     '@babel/preset-flow',
   ]
 
-  if (api.env(['test', 'coverage', 'es5'])) {
-    plugins.push('@babel/plugin-transform-runtime')
-  }
   if (api.env('coverage')) {
     plugins.push('babel-plugin-istanbul')
   }

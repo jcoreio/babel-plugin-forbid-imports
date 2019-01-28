@@ -1,7 +1,7 @@
 {
-  "name": "es2015-library-skeleton",
+  "name": "babel-plugin-forbid-imports",
   "version": "0.0.0-development",
-  "description": "my personal ES2015 library project skeleton",
+  "description": "throw errors if certain packages/directories are imported from",
   "main": "index.js",
   "module": "es/index.js",
   "modules.root": "es",
@@ -57,17 +57,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jedwards1211/es2015-library-skeleton.git"
+    "url": "https://github.com/jcoreio/babel-plugin-forbid-imports.git"
   },
   "keywords": [
-    "es2015"
+    "babel",
+    "imports"
   ],
   "author": "Andy Edwards",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jedwards1211/es2015-library-skeleton/issues"
+    "url": "https://github.com/jcoreio/babel-plugin-forbid-imports/issues"
   },
-  "homepage": "https://github.com/jedwards1211/es2015-library-skeleton#readme",
+  "homepage": "https://github.com/jcoreio/babel-plugin-forbid-imports#readme",
   "devDependencies": {
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.6",
@@ -109,7 +110,5 @@
     "semantic-release": "^15.1.4",
     "travis-deploy-once": "^5.0.9"
   },
-  "dependencies": {
-    "@babel/runtime": "^7.1.5"
-  }
+  "dependencies": {}
 }
