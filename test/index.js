@@ -8,6 +8,68 @@ for (let pkg of ['@babel/core', 'babel-core']) {
   describe(pkg, function() {
     const { transform } = require(pkg)
     describe(`babel-plugin-forbid-imports`, function() {
+      it(`requires packages to be an array`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, { plugins: [[plugin, { packages: 'foo' }]] })
+        ).to.throw(Error, `packages must be an array if given`)
+      })
+      it(`requires packages to contain only strings`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, { plugins: [[plugin, { packages: ['foo', 2] }]] })
+        ).to.throw(Error, `packages[1] must be a string`)
+      })
+      it(`requires patterns to be an array`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, { plugins: [[plugin, { patterns: 'foo' }]] })
+        ).to.throw(Error, `patterns must be an array if given`)
+      })
+      it(`requires packages to contain only strings or arrays of strings`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, {
+            plugins: [[plugin, { patterns: [['foo', 'i'], 2] }]],
+          })
+        ).to.throw(Error, `patterns[1] must be a string or array of strings`)
+
+        expect(() =>
+          transform(code, {
+            plugins: [[plugin, { patterns: [['foo', 'i'], ['bar', 2]] }]],
+          })
+        ).to.throw(Error, `patterns[1][1] must be a string if given`)
+      })
+      it(`requires paths to be an array`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, { plugins: [[plugin, { paths: 'foo' }]] })
+        ).to.throw(Error, `paths must be an array if given`)
+      })
+      it(`requires paths to contain only strings`, function() {
+        const code = `
+        import foo from 'foo'
+        import {size} from 'lodash'
+        `
+        expect(() =>
+          transform(code, { plugins: [[plugin, { paths: ['foo', 2] }]] })
+        ).to.throw(Error, `paths[1] must be a string`)
+      })
       it(`forbids exact package imports`, function() {
         const code = `
         import foo from 'foo'
