@@ -4,7 +4,8 @@ import { expect } from 'chai'
 
 import { describe, it } from 'mocha'
 
-for (let pkg of ['@babel/core', 'babel-core']) {
+for (let prefix of ['@babel/', 'babel-']) {
+  const pkg = `${prefix}core`
   describe(pkg, function() {
     const { transform } = require(pkg)
     describe(`babel-plugin-forbid-imports`, function() {
@@ -81,6 +82,54 @@ for (let pkg of ['@babel/core', 'babel-core']) {
           Error,
           `importing from 'lodash' is forbidden (imported: 'lodash')`
         )
+      })
+      it(`forbids exact package dynamic imports`, function() {
+        const code = `
+        import foo from 'foo'
+        import('lodash')
+        `
+        expect(() =>
+          transform(code, {
+            plugins: [
+              `${prefix}plugin-syntax-dynamic-import`,
+              [plugin, { packages: ['lodash'] }],
+            ],
+          })
+        ).to.throw(
+          Error,
+          `importing from 'lodash' is forbidden (imported: 'lodash')`
+        )
+      })
+      it(`forbids exact package requires`, function() {
+        const code = `
+        import foo from 'foo'
+        require('lodash')
+        `
+        expect(() =>
+          transform(code, {
+            plugins: [
+              `${prefix}plugin-syntax-dynamic-import`,
+              [plugin, { packages: ['lodash'] }],
+            ],
+          })
+        ).to.throw(
+          Error,
+          `importing from 'lodash' is forbidden (imported: 'lodash')`
+        )
+      })
+      it(`ignores shadowed requires`, function() {
+        const code = `
+        import foo from 'foo'
+        function bar(require) {
+          require('lodash')
+        }
+        `
+        transform(code, {
+          plugins: [
+            `${prefix}plugin-syntax-dynamic-import`,
+            [plugin, { packages: ['lodash'] }],
+          ],
+        })
       })
       it(`forbids imports from within packages`, function() {
         const code = `

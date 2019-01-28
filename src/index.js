@@ -1,5 +1,14 @@
 import path from 'path'
 
+function isTrueRequire(path) {
+  return (
+    path.node.type === 'CallExpression' &&
+    path.node.callee.type === 'Identifier' &&
+    path.node.callee.name === 'require' &&
+    !path.scope.hasBinding('require')
+  )
+}
+
 export default function() {
   let lastOpts
   let lastCwd
@@ -70,43 +79,51 @@ export default function() {
     ])
   }
 
+  function test(rawSource, state) {
+    const filename =
+      (state.file && state.file.opts && state.file.opts.filename) ||
+      state.filename
+    const cwd = state.cwd || process.cwd()
+    const source = /^[./]/.test(rawSource)
+      ? path.resolve(path.dirname(filename), rawSource)
+      : rawSource
+    const patterns = selectPatterns(state)
+    patterns.forEach(({ pattern, type, what }) => {
+      if (pattern.test(source)) {
+        let rule
+        switch (type) {
+          case 'package':
+            rule = `'${what}'`
+            break
+          case 'pattern':
+            rule = String(what)
+            break
+          case 'path':
+            rule = path.relative(
+              path.dirname(filename),
+              path.resolve(cwd, what)
+            )
+            if (!/^\./.test(rule)) rule = `./${rule}`
+            rule = `'${rule}'`
+            break
+        }
+
+        throw new Error(
+          `importing from ${rule} is forbidden (imported: '${rawSource}')`
+        )
+      }
+    })
+  }
+
   return {
     visitor: {
-      ImportDeclaration(_path, state) {
-        const filename =
-          (state.file && state.file.opts && state.file.opts.filename) ||
-          state.filename
-        const cwd = state.cwd || process.cwd()
-        const rawSource = _path.node.source.value
-        const source = /^[./]/.test(rawSource)
-          ? path.resolve(path.dirname(filename), rawSource)
-          : rawSource
-        const patterns = selectPatterns(state)
-        patterns.forEach(({ pattern, type, what }) => {
-          if (pattern.test(source)) {
-            let rule
-            switch (type) {
-              case 'package':
-                rule = `'${what}'`
-                break
-              case 'pattern':
-                rule = String(what)
-                break
-              case 'path':
-                rule = path.relative(
-                  path.dirname(filename),
-                  path.resolve(cwd, what)
-                )
-                if (!/^\./.test(rule)) rule = `./${rule}`
-                rule = `'${rule}'`
-                break
-            }
-
-            throw new Error(
-              `importing from ${rule} is forbidden (imported: '${rawSource}')`
-            )
-          }
-        })
+      ImportDeclaration(path, state) {
+        test(path.node.source.value, state)
+      },
+      CallExpression(path, state) {
+        if (path.node.callee.type === 'Import' || isTrueRequire(path)) {
+          test(path.node.arguments[0].value, state)
+        }
       },
     },
   }
